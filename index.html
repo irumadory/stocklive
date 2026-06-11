@@ -184,7 +184,7 @@ let isAdmin = false;
 let searchResults = [];
 let selectedSlot = null; // 현재 배치 대상 슬롯
 let savedChannels = JSON.parse(localStorage.getItem('lv_channels') || '[]');
-const savedLayout = [{"id":0,"channelId":"UC_iT-dQV96rPviS4G4p5b9A","channelName":"1waynews 한길뉴스","videoTitle":"[LIVE2] 현장중계 I 6.3 잠실 자유민주화운동 올림픽공원"},{"id":1,"channelId":"UCY3qNbCdxhfEIjSBpC24X6g","channelName":"아시아투데이","videoTitle":"[🔴아투 LIVE] 일촉즉발 잠실 &#39;재선거&#39; 시위 현장...&#39;1,104표 증발&#39; 첩첩산중 선관위_260611"},{"id":2,"channelId":"UClWM2V6Hfp-grcXR0JEs3rA","channelName":"쿨맨tv","videoTitle":"2026/6/12#7일째#잠실 현장 #실시간 라이브"},{"id":3,"channelId":"UCT8MkqvkDmkHRVDhakk92YQ","channelName":"유리","videoTitle":"🔴잠실 핸드볼 경기장"},{"id":4,"channelId":"UC5FvUjsW_nkgSCdNm756nQA","channelName":"유재명 yujaemyeong","videoTitle":"[올림픽공원 현장 생중계 실시간 라이브] 잠실 올림픽공원 핸드볼경기장 재선거 요구 평화적인 의사표현 현장"},{"id":5,"channelId":"UCJNIJsUluHhuikAost77oCw","channelName":"쿨가이 tv","videoTitle":"2026/6/11#7일차#실시간 오늘도 잠실"},{"id":6,"channelId":"UCWS0tefWL5UpQsZI2yc8ASg","channelName":"일롱 머스크","videoTitle":"[실시간] 잠실 올림픽공원 오후반 오늘도 왔습니다ㅣ생일날 여길 올 줄이야"},{"id":7,"channelId":"UCFD4SJ_zPtqJotoqWdnRDLw","channelName":"팩트룸코리아","videoTitle":"6.11. &quot;6.3잠실국민행쟁&quot;올림핔공원 &quot;윤어게인&quot; &quot;자유민주주의를 지키는 목소리&quot;"},{"id":8,"channelId":"UCsaIrvP4Xzjcf031idR1bCA","channelName":"전사 부배달&뭉찌","videoTitle":"[24시 애국인의 삶] 잠실경기장 재선거 위장 대진연 섬멸 즌사주니어 키우기"}];
+const savedLayout = JSON.parse(localStorage.getItem('lv_layout') || 'null');
 if (savedLayout) savedLayout.forEach((s,i)=>{ if(i<N) slots[i]={...s,id:i}; });
 
 // ══════════════════════════════════════════
@@ -457,32 +457,32 @@ function openVideo(e, videoId){
 
 // ── 배치 저장 → index.html 다운로드 ──
 function saveLayout(){
-  // 현재 HTML 소스를 가져와서 슬롯 데이터를 하드코딩해 다운로드
   const layoutJson = JSON.stringify(slots.map(s=>({
     id:s.id, channelId:s.channelId||null, channelName:s.channelName||'', videoTitle:s.videoTitle||''
   })));
 
-  // 현재 페이지 HTML에서 초기 slots 선언 부분을 저장된 데이터로 교체
-  fetch(location.href)
-    .then(r=>r.text())
-    .then(html=>{
-      // savedLayout 주입: BAKED_LAYOUT 마커로 교체
-      const patched = html.replace(
-        /const savedLayout = JSON\.parse\(localStorage\.getItem\('lv_layout'\) \|\| 'null'\);[\s\S]*?if \(savedLayout\) savedLayout\.forEach\(\(s,i\)=>\{ if\(i<N\) slots\[i\]=\{\.\.\.s,id:i\}; \}\);/,
-        `const savedLayout = ${layoutJson};\nif (savedLayout) savedLayout.forEach((s,i)=>{ if(i<N) slots[i]={...s,id:i}; });`
-      );
-      const blob = new Blob([patched], {type:'text/html'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'index.html';
-      a.click();
-      toast('✅ index.html 다운로드 완료! GitHub에 업로드하세요.');
-    })
-    .catch(()=>{
-      // fetch 실패시(로컬파일 등) localStorage fallback
-      localStorage.setItem('lv_layout', JSON.stringify(slots));
-      toast('⚠️ 로컬 저장 완료. GitHub 배포 환경에서 다시 시도하세요.');
-    });
+  // 현재 페이지의 실제 HTML 소스를 script 태그에서 직접 추출
+  const scripts = document.getElementsByTagName('script');
+  let pageHTML = document.documentElement.outerHTML;
+
+  // savedLayout 부분만 교체
+  const newLayout = `const savedLayout = ${layoutJson};\nif (savedLayout) savedLayout.forEach((s,i)=>{ if(i<N) slots[i]={...s,id:i}; });`;
+  
+  // 패턴 매칭으로 교체
+  pageHTML = pageHTML.replace(
+    /const savedLayout\s*=\s*[\s\S]*?;\s*\nif \(savedLayout\)[\s\S]*?;\s*\n/,
+    newLayout + '\n'
+  );
+
+  const blob = new Blob([pageHTML], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'index.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('✅ index.html 다운로드 완료! GitHub에 업로드하세요.');
 }
 
 // ── 저장 채널 모달 ──
