@@ -29,9 +29,6 @@ input::placeholder{color:var(--text-muted)}
 .btn-green{background:transparent;color:var(--green);border:1.5px solid var(--green)}.btn-green:hover{background:var(--green);color:#000}
 .btn-sm{padding:4px 9px;font-size:11px}
 .admin-badge{font-size:10px;font-weight:700;color:var(--green);border:1.5px solid var(--green);border-radius:4px;padding:2px 7px;flex-shrink:0}
-.pw-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:11px;font-family:'JetBrains Mono',monospace;padding:5px 9px;outline:none;width:120px;transition:border-color .2s}
-.pw-input:focus{border-color:var(--accent)}
-.pw-input::placeholder{color:var(--text-muted);font-family:'Noto Sans KR',sans-serif}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.4s ease-in-out infinite;flex-shrink:0}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 .content{display:flex;flex:1;overflow:hidden;min-height:0}
@@ -96,6 +93,15 @@ input::placeholder{color:var(--text-muted)}
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 .toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:var(--surface3);border:1.5px solid var(--border);border-radius:6px;padding:8px 16px;font-size:12px;color:var(--text);pointer-events:none;z-index:9999;white-space:nowrap;opacity:0;transition:opacity .2s;box-shadow:0 4px 20px rgba(0,0,0,.6)}
 .toast.show{opacity:1}
+
+/* 로그인 모달 */
+.login-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:9998}
+.login-box{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:32px 36px;width:340px}
+.login-box h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.login-box p{font-size:12px;color:var(--text-muted);margin-bottom:20px}
+.login-box input{width:100%;margin-bottom:10px;font-size:13px;padding:9px 12px}
+.login-error{font-size:11px;color:var(--accent);margin-bottom:10px;min-height:16px}
+.login-btns{display:flex;gap:8px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -107,16 +113,16 @@ input::placeholder{color:var(--text-muted)}
 </div>
 <div class="toast" id="toast"></div>
 
-<!-- Firebase SDK (compat 버전 - 전역 스코프) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
 // ════════════════════════════════════════
 // ★ 설정
 // ════════════════════════════════════════
-const ADMIN_PASSWORD = 'iruma2024';
 const CHANNEL_KEY = 'stocklive';
+const ADMIN_EMAIL = 'yhevermore@gmail.com';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAfVTaUrLzzwHv0hae73zFAFXQl1zHdiC8",
@@ -132,7 +138,8 @@ const firebaseConfig = {
 // Firebase 초기화
 // ════════════════════════════════════════
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db   = firebase.database();
+const auth = firebase.auth();
 const channelRef = db.ref(`channels/${CHANNEL_KEY}`);
 
 // ════════════════════════════════════════
@@ -143,6 +150,13 @@ let isAdmin = false;
 let searchResults = [];
 let nextAvailableIdx = 0;
 const slotChIdx = [];
+
+// ════════════════════════════════════════
+// Firebase 인증 상태 감지
+// ════════════════════════════════════════
+auth.onAuthStateChanged((user) => {
+  isAdmin = !!(user && user.email === ADMIN_EMAIL);
+});
 
 // ════════════════════════════════════════
 // Firebase 실시간 리스닝
@@ -174,8 +188,7 @@ function buildViewer() {
       <span id="vLabel" style="font-size:12px;color:var(--text-dim)">${candidateChannels.length}개 채널 모니터링</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-      <input class="pw-input" type="password" id="adminPwInput" placeholder="관리자" onkeydown="if(event.key==='Enter')tryLogin()">
-      <button class="btn btn-outline btn-sm" onclick="tryLogin()">접속</button>
+      <button class="btn btn-outline btn-sm" onclick="showLoginModal()">🔧 관리자</button>
     </div>
   </header>
   <div class="content">
@@ -252,10 +265,7 @@ function onFrameLoad(slotIdx) {
     updateViewerCount();
   }, 1000);
 }
-
-function onFrameError(slotIdx) {
-  tryNextForSlot(slotIdx);
-}
+function onFrameError(slotIdx) { tryNextForSlot(slotIdx); }
 
 function checkAllSlots() {
   for (let i = 0; i < Math.min(9, candidateChannels.length); i++) {
@@ -263,7 +273,6 @@ function checkAllSlots() {
     if (ol && !ol.classList.contains('hidden')) tryNextForSlot(i);
   }
 }
-
 function tryNextForSlot(slotIdx) {
   if (nextAvailableIdx >= candidateChannels.length) return;
   const ch = candidateChannels[nextAvailableIdx];
@@ -272,7 +281,6 @@ function tryNextForSlot(slotIdx) {
   const cell = document.getElementById(`cell-${slotIdx}`);
   if (cell) cell.innerHTML = buildSlotHTML(slotIdx, ch);
 }
-
 function updateViewerCount() {
   let count = 0;
   for (let i = 0; i < Math.min(9, candidateChannels.length); i++) {
@@ -281,6 +289,54 @@ function updateViewerCount() {
   }
   const el = document.getElementById('vCount');
   if (el) el.textContent = `● ${count}`;
+}
+
+// ════════════════════════════════════════
+// 로그인 모달
+// ════════════════════════════════════════
+function showLoginModal() {
+  // 이미 로그인된 경우
+  if (auth.currentUser) { isAdmin = true; renderApp(); return; }
+
+  const modal = document.createElement('div');
+  modal.className = 'login-modal';
+  modal.id = 'loginModal';
+  modal.innerHTML = `
+    <div class="login-box">
+      <h3>🔧 관리자 로그인</h3>
+      <p>Firebase 계정으로 로그인하세요.</p>
+      <input type="email" id="loginEmail" placeholder="이메일" value="${ADMIN_EMAIL}">
+      <input type="password" id="loginPw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="login-error" id="loginError"></div>
+      <div class="login-btns">
+        <button class="btn btn-red" style="flex:1" onclick="doLogin()">로그인</button>
+        <button class="btn btn-outline" onclick="closeLoginModal()">취소</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('loginPw').focus(), 100);
+}
+
+function closeLoginModal() {
+  const m = document.getElementById('loginModal');
+  if (m) m.remove();
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw    = document.getElementById('loginPw').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+    closeLoginModal();
+    isAdmin = true;
+    renderApp();
+    toast('관리자 모드 ✅');
+  } catch(err) {
+    errEl.textContent = '이메일 또는 비밀번호가 틀렸습니다.';
+  }
 }
 
 // ════════════════════════════════════════
@@ -301,7 +357,7 @@ function buildAdmin() {
     <button class="btn btn-outline" onclick="doSearch(false)">🔍 전체</button>
     <div class="vline"></div>
     <button class="btn btn-green" onclick="saveToFirebase()">💾 Firebase 저장</button>
-    <button class="btn btn-outline btn-sm" onclick="logout()">로그아웃</button>
+    <button class="btn btn-outline btn-sm" onclick="doLogout()">로그아웃</button>
   </header>
   <div class="content">
     <div class="admin-main">
@@ -323,8 +379,7 @@ function buildAdmin() {
       </div>
       <div class="sb-notice">
         ✅ Firebase 연동됨<br>
-        저장 즉시 방문자 화면에 반영됩니다.<br>
-        GitHub 업로드 불필요!
+        저장 즉시 방문자 화면에 반영됩니다.
       </div>
       <div class="sb-list" id="sbList"></div>
       <div class="add-ch-form">
@@ -382,11 +437,7 @@ function moveCh(i, dir) {
   [candidateChannels[i], candidateChannels[j]] = [candidateChannels[j], candidateChannels[i]];
   renderCandidateList();
 }
-
-function delCh(i) {
-  candidateChannels.splice(i, 1);
-  renderCandidateList();
-}
+function delCh(i) { candidateChannels.splice(i, 1); renderCandidateList(); }
 
 function addChDirect() {
   const name = document.getElementById('mChName').value.trim();
@@ -397,7 +448,7 @@ function addChDirect() {
   document.getElementById('mChName').value = '';
   document.getElementById('mChId').value = '';
   renderCandidateList();
-  toast(`"${name}" 추가 완료 — 💾 Firebase 저장을 눌러 반영하세요`);
+  toast(`"${name}" 추가 완료`);
 }
 
 function saveToFirebase() {
@@ -405,7 +456,7 @@ function saveToFirebase() {
   const data = {};
   candidateChannels.forEach((ch, i) => { data[i] = ch; });
   channelRef.set(data)
-    .then(() => toast('✅ Firebase 저장 완료! 방문자 화면에 즉시 반영됩니다.'))
+    .then(() => toast('✅ Firebase 저장 완료! 즉시 반영됩니다.'))
     .catch(err => toast(`❌ 저장 실패: ${err.message}`));
 }
 
@@ -469,31 +520,64 @@ function addToCandidate(idx) {
   candidateChannels.push({ channelId: r.channelId, channelName: r.channelName });
   renderCandidateList();
   renderResultCards(searchResults);
-  toast(`"${r.channelName}" 추가 — 💾 Firebase 저장을 눌러 반영하세요`);
+  toast(`"${r.channelName}" 추가됨`);
 }
 
-function tryLogin() {
-  const pw = document.getElementById('adminPwInput').value.trim();
-  if (pw === ADMIN_PASSWORD) { isAdmin = true; renderApp(); toast('관리자 모드'); }
-  else { toast('비밀번호가 틀렸습니다.'); document.getElementById('adminPwInput').value = ''; }
+function doLogout() {
+  auth.signOut().then(() => {
+    isAdmin = false;
+    renderApp();
+    toast('로그아웃 완료');
+  });
 }
 
-function logout() { isAdmin = false; renderApp(); }
+function showLoginModal() {
+  if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
+    isAdmin = true; renderApp(); return;
+  }
+  const modal = document.createElement('div');
+  modal.className = 'login-modal';
+  modal.id = 'loginModal';
+  modal.innerHTML = `
+    <div class="login-box">
+      <h3>🔧 관리자 로그인</h3>
+      <p>Firebase 계정으로 로그인하세요.</p>
+      <input type="email" id="loginEmail" placeholder="이메일" value="${ADMIN_EMAIL}">
+      <input type="password" id="loginPw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="login-error" id="loginError"></div>
+      <div class="login-btns">
+        <button class="btn btn-red" style="flex:1" onclick="doLogin()">로그인</button>
+        <button class="btn btn-outline" onclick="closeLoginModal()">취소</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('loginPw') && document.getElementById('loginPw').focus(), 100);
+}
+
+function closeLoginModal() {
+  const m = document.getElementById('loginModal');
+  if (m) m.remove();
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw    = document.getElementById('loginPw').value;
+  const errEl = document.getElementById('loginError');
+  if (errEl) errEl.textContent = '';
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+    closeLoginModal();
+    isAdmin = true;
+    renderApp();
+    toast('관리자 모드 ✅');
+  } catch(err) {
+    if (errEl) errEl.textContent = '이메일 또는 비밀번호가 틀렸습니다.';
+  }
+}
 
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 let _tt;
 function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800); }
-
-window.tryLogin       = tryLogin;
-window.logout         = logout;
-window.doSearch       = doSearch;
-window.saveToFirebase = saveToFirebase;
-window.addToCandidate = addToCandidate;
-window.addChDirect    = addChDirect;
-window.moveCh         = moveCh;
-window.delCh          = delCh;
-window.onFrameLoad    = onFrameLoad;
-window.onFrameError   = onFrameError;
 </script>
 </body>
 </html>
