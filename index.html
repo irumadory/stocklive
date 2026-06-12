@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
+<html lang="ko"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YouTube 라이브 멀티뷰</title>
@@ -106,8 +104,652 @@ input::placeholder{color:var(--text-muted)}
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
-<div class="toast" id="toast"></div>
+<div class="app" id="app">
+  <header>
+    <div class="logo">LIVE<em>VIEW</em></div>
+    <div class="vline"></div>
+    <span class="admin-badge">🔧 ADMIN</span>
+    <div class="vline"></div>
+    <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0">API KEY</span>
+    <input type="password" id="apiKey" placeholder="YouTube Data API v3 키" value="AIzaSyD9F-OCy4MeqEcmdE1sH47zW4FikmFiKPs">
+    <div class="vline"></div>
+    <input type="text" id="searchInput" placeholder="검색어 (예: 잠실, 부정선거, 주식 라이브...)">
+    <button class="btn btn-red" id="btnLive">🔴 라이브만</button>
+    <button class="btn btn-outline" id="btnAll">🔍 전체</button>
+    <div class="vline"></div>
+    <button class="btn btn-green" id="btnSave">💾 배치 저장</button>
+    <button class="btn btn-outline btn-sm" id="btnLogout">로그아웃</button>
+  </header>
+  <div class="content">
+    <div class="admin-main">
+      <div class="results-grid" id="resultsGrid">
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UChlgI3UHCOnwUGzWzbJ3H5w&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[LIVE] 대한민국 24시간 뉴스채널 YTN - 국내 시청자용</div>
+        <div class="rcard-ch"> YTN</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(0)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=aZyD6EPl6KU','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC3p-0EWA8OXko2EUDUXAy5w&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[LIVE] 트레이딩 No.1 서울경제TV│주식│증권│재테크</div>
+        <div class="rcard-ch">서울경제TV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(1)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=i6zpgb2zuvs','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCcZ65BfGBP8SvkS_pVcto4g&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">구름탄손오공 LIVE: 세력도 울고 갈 급등 차트 분석 #실시간 #라이브 #주식</div>
+        <div class="rcard-ch">구름탄손오공</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(2)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=ZPT3uFZ551U','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCTHCOPwqNfZ0uiKOvFyhGwg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[생방송] 24시간 현장을 전합니다 / 연합뉴스TV  (YonhapnewsTV)</div>
+        <div class="rcard-ch">연합뉴스TV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(3)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=6QZ_qc75ihU','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard selected">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC6kZpTl39-_SqfBrF1-N2oQ&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        <div class="rcard-added">✓ 추가됨</div>
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">연합뉴스경제TV LIVE</div>
+        <div class="rcard-ch">연합뉴스경제TV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(4)">✓ 추가됨</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=yhpbioCP6nA','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCF8AeLlUbEpKju6v1H6p8Eg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[한국경제TV LIVE]</div>
+        <div class="rcard-ch">한국경제TV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(5)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=VlaCnp1fxI8','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard selected">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UClErHbdZKUnD1NyIUeQWvuQ&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        <div class="rcard-added">✓ 추가됨</div>
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[LIVE] 부자되는 좋은습관 MTN 머니투데이방송 (뉴스&amp;amp;증권 경제방송)</div>
+        <div class="rcard-ch">MTN 머니투데이방송</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(6)">✓ 추가됨</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=lb1oB2feqkQ','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC38IlqMxZ_YtFg3eSGmmJnQ&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[LIVE] YTN 생방송 뉴스를 보실 수 있습니다 #LIVE #YTNDMB #YTN</div>
+        <div class="rcard-ch">YTN dmb</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(7)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=2C2WCLhDsR4','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCZouzNgOxt5BEzLq-XjkYOw&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">26년 6월 12일 주식 라이브 올라운더의 성장기.. 탄탄대로 가보자</div>
+        <div class="rcard-ch">조용한 탄탄</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(8)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=LTvAQTL0cuk','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard selected">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC8Sv6O3Ux8ePVqorx8aOBMg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        <div class="rcard-added">✓ 추가됨</div>
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[LIVE🔴] 믿을 수 있는 경제방송 이데일리TV</div>
+        <div class="rcard-ch">이데일리TV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(9)">✓ 추가됨</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=5cFoz90FUMk','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC686kNpKiz45ChnxGV2K6Hg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">6월 12일 금요일 오대표 LIVE🔴 시초가 수익매매｜오늘 수익 나는 종목 흐름</div>
+        <div class="rcard-ch">김앤오 수익연구소</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(10)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=mCA4Te71jNo','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCfO-wUzPDqRK3pKm1PUDn5g&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">2026년 6월  12일  금요일  9시 실시간 라이브 주식방송</div>
+        <div class="rcard-ch">핫스탁주식(이태양주식투자연구소)</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(11)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=Kkdfx2-sRq4','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCkx7F74PSdo42vYhOxwWgOg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[6/12]장중 실시간 주식 주도테마 주도주 대장주 검색 분류 및 찾는 방법/유튜브 채널 테마네비</div>
+        <div class="rcard-ch">테마네비</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(12)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=-VBYH3QKPuw','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCswvhzJzr-_URadJeN3UVlw&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[주식LIVE] 새학기 이벤트 / 🔥신뢰도 99프로 AI차트🔥/ 월천 트레이더 배출/ 주식 양극화 시대 해법</div>
+        <div class="rcard-ch">SgtSpank</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(13)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=GxKL2l0Ujfc','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC5AKhgfRyQF5LzWTQH6jKkw&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">6월12일 주식장사부 라이브 #단타매매 #장중시황 #급등주</div>
+        <div class="rcard-ch">주식 장사부</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(14)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=Rx_E48kVKB4','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCzQDiVypgaux413crFC9Byg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">주식딱지 주식 라이브 방송</div>
+        <div class="rcard-ch">주식딱지</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(15)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=YdqsvgCK9vM','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCAcesv8qLL5-4BLI6bhHKxg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[6월 12일 주식] 반등을 넘어 상승까지! 종목에 대한 분류가 꼭 필요한 시점!</div>
+        <div class="rcard-ch">주식명사수 주명</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(16)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=bG4NwLiQmak','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCgmty_Hjfs4SEiOfc3uIxJA&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">55번째 라이브 6월12일  주식화백 #검색식 #캐치매매 #주식라이브 #종가배팅 #단타</div>
+        <div class="rcard-ch">주식화백</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(17)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=h5NodheChUo','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard selected">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCgJ5pT6S2NuTVP-6-AlLZew&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        <div class="rcard-added">✓ 추가됨</div>
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">📈 맛있는 수익, 건강한 투자! 대한민국 No.1 증권경제 전문 채널 토마토TV</div>
+        <div class="rcard-ch">TomatoTV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(18)">✓ 추가됨</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=w05Ejc0iOVI','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC5J1M4FQdWUQuPoNj2XFdMg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[6월 12일] (LIVE) 주세연TV 변곡점 매매기법</div>
+        <div class="rcard-ch">주세연TV_세력주 매매의 기술</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(19)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=EOaWHVI_evw','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCQ1YzrELKC91uONoAn2rogw&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">(2026 06 12 금 방송 중 )계좌를 지키는 게 먼저다 들어와라 / 사면 빠지고 팔면 쳐 올리는 머같은 국장 / NXT 부터 오후장까지 매매 스켈핑 단타 원칙을 지향하는 방송</div>
+        <div class="rcard-ch">여주개미tv</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(20)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=gudD4jdw8MI','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC6AmjmcAKZ0fw1P-bmUG2RA&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[주식라이브] 🔴LIVE 6월 12일 금요일,  장중 실시간 주식방송! 급등주 포착! 실시간 무료 종목 추천! [유진테크, 코칩, 한화비전, 원익IPS, 제주은행, LG씨엔에스]</div>
+        <div class="rcard-ch">주식라이브 - 주식 테마 분석 채널!</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(21)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=YJU2lsyK8dQ','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC-0_IGmAcWOX4NI7AxzKf6Q&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">#주식방송 #종목상담 #주식라이브 #단타추천 #삼성전자 #sk하이닉스  #삼성전기 #트럼프 #상한가</div>
+        <div class="rcard-ch">주식이미래다(주미다)</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(22)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=BKKBitVbbhs','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard selected">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCNi2OWpVGVBC2SuMBGXFzbA&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        <div class="rcard-added">✓ 추가됨</div>
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[라이브] 코스피 야간선물 &amp;#39;급등&amp;#39; 삼전닉스 필두 코스피 신기록 쓸까? #코스피 #삼성전자 #sk하이닉스 #삼전닉스 #국내증시 #주식 #경제</div>
+        <div class="rcard-ch">딜사이트경제TV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(23)">✓ 추가됨</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=6-t-18aunmY','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCnTZ9DHMo8oEoVIZrGlVoOA&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[실시간 공부방] 오늘 살 주식, 팔 주식, 서로 머리 맞대고 의논해요~</div>
+        <div class="rcard-ch">815 캠퍼스</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(24)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=VJ2SKJDXmR8','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCUXjr9N379ZC4PLWS6uoYtw&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">Money라인 라이브 방송</div>
+        <div class="rcard-ch">Money 라인</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(25)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=zeMDKbkrJTI','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCIuHLBoyI7L03OUo2Y5rQ2g&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">토스증권 주식 급등주로 -770만원 잃음..급등주로 부활가능?</div>
+        <div class="rcard-ch">남구</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(26)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=SYl7ipILs9Q','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCVlidKGFKHe3hIL7H1_0uYQ&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">🔴주회장 불금 오전방송  #주식실시간 #주식방송</div>
+        <div class="rcard-ch">주회장재테크-주식부자</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(27)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=k5ID-UotZI0','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard selected">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCnfwIKyFYRuqZzzKBDt6JOA&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        <div class="rcard-added">✓ 추가됨</div>
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[라이브] 대한민국 대표 재테크 채널 매일경제TV</div>
+        <div class="rcard-ch">매일경제TV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(28)">✓ 추가됨</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=s9xL1DpBsfQ','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCbohPwmXNavpHKHP50MJP4w&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">2026년 6월 12일(금) 실시간주식방송!!</div>
+        <div class="rcard-ch">주식히어로 신의신</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(29)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=aNkayTT5R8I','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCUMGUgcI3BxMNtzx89G4cRw&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">26.06.12 주식 실시간 방송 당일 급등주 주도주 대장주 관심종목</div>
+        <div class="rcard-ch">스톡타임_지금은 투자할 시간!</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(30)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=5GtTsR-Huas','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UC9mQuDCcj57itXQFvxNbk0w&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">🔴LIVE 6월 12일 김정수 전문가  쪽집게 라이브 방송 ~   #SK하이닉스 최저점 완벽적중, 이제부터는 이 종목 보시면 됩니다.</div>
+        <div class="rcard-ch">여의도호랑이</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(31)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=4pcdajDS7fI','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCeqxd-2HypimgY9M70Sw2kw&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[6월 12일 주식라이브] 미국증시 급등 후 오늘 한국증시 어디로? / 삼성전자·SK하이닉스·레버리지 전략</div>
+        <div class="rcard-ch">신동경경제TV</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(32)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=apTQWHqvdWM','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCK-57SbWjBGawdEGKA4Ky3Q&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">투자뉴스 라이브</div>
+        <div class="rcard-ch">arche</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(33)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=1fgsB7brqQw','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCVwbb5MRDf8BxIAmxv9eDoA&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">26/06/12 언제 10만원</div>
+        <div class="rcard-ch">일퍼라도</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(34)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=aWE-KjArhYc','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div>
+    <div class="rcard ">
+      <div class="rcard-thumb">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCEZMlt3tkegDXqDW3h9oPIg&amp;autoplay=1&amp;mute=1&amp;rel=0&amp;modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen=""></iframe>
+        <div class="rcard-live">LIVE</div>
+        
+      </div>
+      <div class="rcard-body">
+        <div class="rcard-title">[주식LIVE] 새학기 이벤트 / 🔥신뢰도 99프로 AI차트🔥/ 월천 트레이더 배출/ 주식 양극화 시대 해법</div>
+        <div class="rcard-ch">惠子子酱</div>
+        <div class="rcard-actions">
+          <button class="rcard-btn rcard-btn-place" onclick="addToCandidate(35)">+ 후보 추가</button>
+          <button class="rcard-btn rcard-btn-yt" onclick="event.stopPropagation();window.open('https://www.youtube.com/watch?v=IF3sXUDajIs','_blank')">↗ YT</button>
+        </div>
+      </div>
+    </div></div>
+    </div>
+    <div class="sidebar">
+      <div class="sb-head">
+        <span class="sb-title">📋 후보 채널</span>
+        <span class="sb-count" id="sbCount">6</span>
+      </div>
+      <div class="sb-notice">
+        순서대로 9슬롯 자동 배치<br>
+        오류·종료 시 다음 후보로 자동 교체
+      </div>
+      <div class="sb-list" id="sbList">
+    <div class="ci">
+      <div class="ci-order">1</div>
+      <div class="ci-info">
+        <div class="ci-name">MTN 머니투데이방송</div>
+        <div class="ci-id">UClErHbdZKUnD1NyIUeQWvuQ</div>
+      </div>
+      <button class="ci-up" onclick="moveCh(0,-1)">▲</button>
+      <button class="ci-dn" onclick="moveCh(0,1)">▼</button>
+      <button class="ci-del" onclick="delCh(0)">×</button>
+    </div>
+    <div class="ci">
+      <div class="ci-order">2</div>
+      <div class="ci-info">
+        <div class="ci-name">이데일리TV</div>
+        <div class="ci-id">UC8Sv6O3Ux8ePVqorx8aOBMg</div>
+      </div>
+      <button class="ci-up" onclick="moveCh(1,-1)">▲</button>
+      <button class="ci-dn" onclick="moveCh(1,1)">▼</button>
+      <button class="ci-del" onclick="delCh(1)">×</button>
+    </div>
+    <div class="ci">
+      <div class="ci-order">3</div>
+      <div class="ci-info">
+        <div class="ci-name">TomatoTV</div>
+        <div class="ci-id">UCgJ5pT6S2NuTVP-6-AlLZew</div>
+      </div>
+      <button class="ci-up" onclick="moveCh(2,-1)">▲</button>
+      <button class="ci-dn" onclick="moveCh(2,1)">▼</button>
+      <button class="ci-del" onclick="delCh(2)">×</button>
+    </div>
+    <div class="ci">
+      <div class="ci-order">4</div>
+      <div class="ci-info">
+        <div class="ci-name">딜사이트경제TV</div>
+        <div class="ci-id">UCNi2OWpVGVBC2SuMBGXFzbA</div>
+      </div>
+      <button class="ci-up" onclick="moveCh(3,-1)">▲</button>
+      <button class="ci-dn" onclick="moveCh(3,1)">▼</button>
+      <button class="ci-del" onclick="delCh(3)">×</button>
+    </div>
+    <div class="ci">
+      <div class="ci-order">5</div>
+      <div class="ci-info">
+        <div class="ci-name">매일경제TV</div>
+        <div class="ci-id">UCnfwIKyFYRuqZzzKBDt6JOA</div>
+      </div>
+      <button class="ci-up" onclick="moveCh(4,-1)">▲</button>
+      <button class="ci-dn" onclick="moveCh(4,1)">▼</button>
+      <button class="ci-del" onclick="delCh(4)">×</button>
+    </div>
+    <div class="ci">
+      <div class="ci-order">6</div>
+      <div class="ci-info">
+        <div class="ci-name">연합뉴스경제TV</div>
+        <div class="ci-id">UC6kZpTl39-_SqfBrF1-N2oQ</div>
+      </div>
+      <button class="ci-up" onclick="moveCh(5,-1)">▲</button>
+      <button class="ci-dn" onclick="moveCh(5,1)">▼</button>
+      <button class="ci-del" onclick="delCh(5)">×</button>
+    </div></div>
+      <div class="add-ch-form">
+        <div class="add-ch-hdr">채널 직접 추가</div>
+        <input type="text" id="mChName" placeholder="채널 이름">
+        <div class="add-ch-row">
+          <input type="text" id="mChId" placeholder="채널ID (UCxxxxxxxx...)">
+          <button class="btn btn-red btn-sm" onclick="addChDirect()">추가</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="statusbar">
+    <span><span class="s-live">● 0</span>&nbsp;후보 채널</span>
+    <span id="sSlots" style="color:var(--green);font-weight:700">검색결과 36개</span>
+    <span class="s-hint">+ 후보 추가 클릭 &nbsp;|&nbsp; 💾 배치 저장 → GitHub 업로드</span>
+  </div></div>
+<div class="toast show" id="toast">"연합뉴스경제TV" 후보 채널 추가됨</div>
 <script>
 // ══════════════════════════════════
 // ★ 설정
@@ -117,7 +759,7 @@ const ADMIN_PASSWORD = 'iruma2024';
 // ══════════════════════════════════
 // 후보 채널 목록
 // ══════════════════════════════════
-let candidateChannels = [];
+let candidateChannels = [{"channelId":"UClErHbdZKUnD1NyIUeQWvuQ","channelName":"MTN 머니투데이방송"},{"channelId":"UC8Sv6O3Ux8ePVqorx8aOBMg","channelName":"이데일리TV"},{"channelId":"UCgJ5pT6S2NuTVP-6-AlLZew","channelName":"TomatoTV"},{"channelId":"UCNi2OWpVGVBC2SuMBGXFzbA","channelName":"딜사이트경제TV"},{"channelId":"UCnfwIKyFYRuqZzzKBDt6JOA","channelName":"매일경제TV"},{"channelId":"UC6kZpTl39-_SqfBrF1-N2oQ","channelName":"연합뉴스경제TV"}];
 
 // ══════════════════════════════════
 // 상태
@@ -480,5 +1122,6 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 let _tt;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2800)}
 </script>
-</body>
-</html>
+
+
+</body></html>
