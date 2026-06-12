@@ -14,7 +14,6 @@
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow:hidden}
 .app{display:flex;flex-direction:column;height:100vh}
-
 header{display:flex;align-items:center;gap:10px;padding:0 14px;height:50px;flex-shrink:0;background:var(--surface);border-bottom:2px solid var(--border)}
 .logo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;color:var(--accent);letter-spacing:.08em;white-space:nowrap;flex-shrink:0}
 .logo em{color:var(--text-dim);font-style:normal;font-weight:400;font-size:11px;margin-left:3px}
@@ -36,7 +35,6 @@ input::placeholder{color:var(--text-muted)}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.4s ease-in-out infinite;flex-shrink:0}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 .content{display:flex;flex:1;overflow:hidden;min-height:0}
-
 .slot-grid{flex:1;display:grid;min-height:0;gap:3px;padding:3px;background:#000}
 .cell{position:relative;background:var(--surface);border-radius:5px;overflow:hidden;border:2px solid var(--border);min-height:0}
 .cell.main-cell{grid-column:1;grid-row:1/3}
@@ -49,7 +47,6 @@ input::placeholder{color:var(--text-muted)}
 .cell-overlay .spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 .cell-overlay .ol-label{font-size:11px;color:var(--text-muted)}
 @keyframes spin{to{transform:rotate(360deg)}}
-
 .admin-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .results-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:10px;background:var(--bg);align-content:start}
 .results-grid::-webkit-scrollbar{width:6px}
@@ -69,7 +66,6 @@ input::placeholder{color:var(--text-muted)}
 .rcard-btn{flex:1;padding:4px 0;font-size:10px;font-weight:600;border-radius:3px;border:none;cursor:pointer;transition:all .15s;text-align:center}
 .rcard-btn-place{background:rgba(46,196,182,.15);color:var(--green);border:1px solid rgba(46,196,182,.3)}.rcard-btn-place:hover{background:var(--green);color:#000}
 .rcard-btn-yt{background:rgba(255,53,53,.12);color:var(--accent);border:1px solid rgba(255,53,53,.25)}.rcard-btn-yt:hover{background:var(--accent);color:#fff}
-
 .sidebar{width:260px;flex-shrink:0;background:var(--surface);border-left:2px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .sb-head{padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .sb-title{font-size:12px;font-weight:700;color:var(--text)}
@@ -92,7 +88,6 @@ input::placeholder{color:var(--text-muted)}
 .add-ch-row{display:flex;gap:5px}
 .add-ch-row input{flex:1}
 .add-ch-hdr{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em}
-
 .statusbar{height:28px;background:var(--surface);border-top:2px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:16px;font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;flex-shrink:0}
 .s-live{color:var(--accent);font-weight:700}
 .s-hint{margin-left:auto;font-size:10px;color:var(--text-muted);font-family:'Noto Sans KR',sans-serif}
@@ -104,17 +99,25 @@ input::placeholder{color:var(--text-muted)}
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
+<div class="app" id="app">
+  <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+    <div class="spinner"></div>
+    <div style="font-size:13px;color:var(--text-muted)">Firebase 연결 중...</div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
-<!-- Firebase SDK -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<!-- Firebase SDK (compat 버전 - 전역 스코프) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+<script>
 // ════════════════════════════════════════
-// ★ Firebase 설정 (여기만 수정)
+// ★ 설정
 // ════════════════════════════════════════
+const ADMIN_PASSWORD = 'iruma2024';
+const CHANNEL_KEY = 'stocklive';
+
 const firebaseConfig = {
   apiKey: "AIzaSyAfVTaUrLzzwHv0hae73zFAFXQl1zHdiC8",
   authDomain: "liveview-e6bb7.firebaseapp.com",
@@ -126,21 +129,11 @@ const firebaseConfig = {
 };
 
 // ════════════════════════════════════════
-// ★ 이 페이지의 채널 키 (liveview / stocklive 구분)
-// ════════════════════════════════════════
-const CHANNEL_KEY = 'stocklive';
-
-// ════════════════════════════════════════
-// ★ 관리자 비밀번호
-// ════════════════════════════════════════
-const ADMIN_PASSWORD = 'iruma2024';
-
-// ════════════════════════════════════════
 // Firebase 초기화
 // ════════════════════════════════════════
-const app = initializeApp(firebaseConfig);
-const db  = getDatabase(app);
-const channelRef = ref(db, `channels/${CHANNEL_KEY}`);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const channelRef = db.ref(`channels/${CHANNEL_KEY}`);
 
 // ════════════════════════════════════════
 // 상태
@@ -152,26 +145,17 @@ let nextAvailableIdx = 0;
 const slotChIdx = [];
 
 // ════════════════════════════════════════
-// Firebase 실시간 리스닝 → 채널 변경 시 자동 반영
+// Firebase 실시간 리스닝
 // ════════════════════════════════════════
-onValue(channelRef, (snapshot) => {
+channelRef.on('value', (snapshot) => {
   const data = snapshot.val();
   candidateChannels = data ? Object.values(data) : [];
-  if (!isAdmin) {
-    renderApp();
-  } else {
-    renderCandidateList();
-  }
+  renderApp();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('app').innerHTML = `
-    <div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:var(--bg)">
-      <div class="spinner"></div>
-      <div style="font-size:13px;color:var(--text-muted)">Firebase 연결 중...</div>
-    </div>`;
-});
-
+// ════════════════════════════════════════
+// 앱 렌더
+// ════════════════════════════════════════
 function renderApp() {
   document.getElementById('app').innerHTML = isAdmin ? buildAdmin() : buildViewer();
   isAdmin ? initAdmin() : initViewer();
@@ -190,8 +174,8 @@ function buildViewer() {
       <span id="vLabel" style="font-size:12px;color:var(--text-dim)">${candidateChannels.length}개 채널 모니터링</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-      <input class="pw-input" type="password" id="adminPwInput" placeholder="관리자" onkeydown="if(event.key==='Enter')window._tryLogin()">
-      <button class="btn btn-outline btn-sm" onclick="window._tryLogin()">접속</button>
+      <input class="pw-input" type="password" id="adminPwInput" placeholder="관리자" onkeydown="if(event.key==='Enter')tryLogin()">
+      <button class="btn btn-outline btn-sm" onclick="tryLogin()">접속</button>
     </div>
   </header>
   <div class="content">
@@ -207,12 +191,10 @@ function initViewer() {
   const wrap = document.getElementById('viewerGrid');
   if (!wrap) return;
   wrap.innerHTML = '';
-
   const n = Math.min(9, candidateChannels.length);
   nextAvailableIdx = n;
 
-  // 그리드 레이아웃
-  if (n <= 1)      { wrap.style.gridTemplateColumns='1fr'; wrap.style.gridTemplateRows='1fr'; }
+  if      (n <= 1) { wrap.style.gridTemplateColumns='1fr'; wrap.style.gridTemplateRows='1fr'; }
   else if (n === 2){ wrap.style.gridTemplateColumns='1fr 1fr'; wrap.style.gridTemplateRows='1fr'; }
   else if (n === 3){ wrap.style.gridTemplateColumns='1fr 1fr 1fr'; wrap.style.gridTemplateRows='1fr'; }
   else if (n === 4){ wrap.style.gridTemplateColumns='1fr 1fr'; wrap.style.gridTemplateRows='1fr 1fr'; }
@@ -231,16 +213,14 @@ function initViewer() {
     cell.id = `cell-${i}`;
     cell.innerHTML = buildSlotHTML(i, candidateChannels[i]);
     cell.style.cursor = 'pointer';
+    const chIdx = i;
     cell.addEventListener('click', e => {
       if (e.target.tagName === 'IFRAME') return;
-      const ch = candidateChannels[slotChIdx[i]];
+      const ch = candidateChannels[slotChIdx[chIdx]];
       if (ch) window.open(`https://www.youtube.com/channel/${ch.channelId}`, '_blank');
     });
     wrap.appendChild(cell);
   }
-
-  document.getElementById('btnLogin').addEventListener('click', tryLogin);
-  document.getElementById('adminPwInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
 
   updateViewerCount();
   setTimeout(checkAllSlots, 12000);
@@ -258,23 +238,24 @@ function buildSlotHTML(slotIdx, ch) {
       src="https://www.youtube.com/embed/live_stream?channel=${ch.channelId}&autoplay=1&mute=1&rel=0&modestbranding=1"
       allow="autoplay;encrypted-media;fullscreen"
       allowfullscreen
-      onload="window._onFrameLoad(${slotIdx})"
-      onerror="window._onFrameError(${slotIdx})">
+      onload="onFrameLoad(${slotIdx})"
+      onerror="onFrameError(${slotIdx})">
     </iframe>
     <div class="live-badge-cell">LIVE</div>
     <div class="cell-label" id="clabel-${slotIdx}">${esc(ch.channelName)}</div>`;
 }
 
-window._onFrameLoad = function(slotIdx) {
+function onFrameLoad(slotIdx) {
   setTimeout(() => {
     const ol = document.getElementById(`ol-${slotIdx}`);
     if (ol) ol.classList.add('hidden');
     updateViewerCount();
   }, 1000);
-};
-window._onFrameError = function(slotIdx) {
+}
+
+function onFrameError(slotIdx) {
   tryNextForSlot(slotIdx);
-};
+}
 
 function checkAllSlots() {
   for (let i = 0; i < Math.min(9, candidateChannels.length); i++) {
@@ -313,14 +294,14 @@ function buildAdmin() {
     <span class="admin-badge">🔧 ADMIN</span>
     <div class="vline"></div>
     <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0">API KEY</span>
-    <input type="password" id="apiKey" placeholder="YouTube Data API v3 키" value="${sessionStorage.getItem('lv_api') || ''}">
+    <input type="password" id="apiKey" placeholder="YouTube Data API v3 키" value="${sessionStorage.getItem('lv_api')||''}">
     <div class="vline"></div>
     <input type="text" id="searchInput" placeholder="검색어 (예: 잠실, 부정선거, 주식 라이브...)">
-    <button class="btn btn-red" id="btnLive">🔴 라이브만</button>
-    <button class="btn btn-outline" id="btnAll">🔍 전체</button>
+    <button class="btn btn-red" onclick="doSearch(true)">🔴 라이브만</button>
+    <button class="btn btn-outline" onclick="doSearch(false)">🔍 전체</button>
     <div class="vline"></div>
-    <button class="btn btn-green" id="btnSave">💾 Firebase 저장</button>
-    <button class="btn btn-outline btn-sm" id="btnLogout">로그아웃</button>
+    <button class="btn btn-green" onclick="saveToFirebase()">💾 Firebase 저장</button>
+    <button class="btn btn-outline btn-sm" onclick="logout()">로그아웃</button>
   </header>
   <div class="content">
     <div class="admin-main">
@@ -351,7 +332,7 @@ function buildAdmin() {
         <input type="text" id="mChName" placeholder="채널 이름">
         <div class="add-ch-row">
           <input type="text" id="mChId" placeholder="채널ID (UCxxxxxxxx...)">
-          <button class="btn btn-red btn-sm" id="btnAddCh">추가</button>
+          <button class="btn btn-red btn-sm" onclick="addChDirect()">추가</button>
         </div>
       </div>
     </div>
@@ -359,17 +340,14 @@ function buildAdmin() {
   <div class="statusbar">
     <span><span class="s-live">● ${candidateChannels.length}</span>&nbsp;후보 채널</span>
     <span id="sSlots" style="color:var(--green);font-weight:700">검색결과 0</span>
-    <span class="s-hint">💾 Firebase 저장 클릭 → GitHub 업로드 없이 즉시 반영</span>
+    <span class="s-hint">💾 Firebase 저장 → GitHub 업로드 없이 즉시 반영</span>
   </div>`;
 }
 
 function initAdmin() {
-  document.getElementById('btnLive').addEventListener('click', () => doSearch(true));
-  document.getElementById('btnAll').addEventListener('click', () => doSearch(false));
-  document.getElementById('btnSave').addEventListener('click', saveToFirebase);
-  document.getElementById('btnLogout').addEventListener('click', logout);
-  document.getElementById('btnAddCh').addEventListener('click', addChDirect);
-  document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(false); });
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch(false);
+  });
   document.getElementById('apiKey').addEventListener('change', () => {
     sessionStorage.setItem('lv_api', document.getElementById('apiKey').value.trim());
   });
@@ -387,7 +365,7 @@ function renderCandidateList() {
   }
   list.innerHTML = candidateChannels.map((ch, i) => `
     <div class="ci">
-      <div class="ci-order">${i + 1}</div>
+      <div class="ci-order">${i+1}</div>
       <div class="ci-info">
         <div class="ci-name">${esc(ch.channelName)}</div>
         <div class="ci-id">${ch.channelId}</div>
@@ -404,7 +382,11 @@ function moveCh(i, dir) {
   [candidateChannels[i], candidateChannels[j]] = [candidateChannels[j], candidateChannels[i]];
   renderCandidateList();
 }
-function delCh(i) { candidateChannels.splice(i, 1); renderCandidateList(); }
+
+function delCh(i) {
+  candidateChannels.splice(i, 1);
+  renderCandidateList();
+}
 
 function addChDirect() {
   const name = document.getElementById('mChName').value.trim();
@@ -418,21 +400,15 @@ function addChDirect() {
   toast(`"${name}" 추가 완료 — 💾 Firebase 저장을 눌러 반영하세요`);
 }
 
-// ════════════════════════════════════════
-// Firebase 저장 → 즉시 방문자 반영
-// ════════════════════════════════════════
 function saveToFirebase() {
   if (!candidateChannels.length) { toast('후보 채널이 없습니다.'); return; }
   const data = {};
   candidateChannels.forEach((ch, i) => { data[i] = ch; });
-  set(channelRef, data)
-    .then(() => toast(`✅ Firebase 저장 완료! 방문자 화면에 즉시 반영됩니다.`))
+  channelRef.set(data)
+    .then(() => toast('✅ Firebase 저장 완료! 방문자 화면에 즉시 반영됩니다.'))
     .catch(err => toast(`❌ 저장 실패: ${err.message}`));
 }
 
-// ════════════════════════════════════════
-// 검색
-// ════════════════════════════════════════
 async function doSearch(liveOnly) {
   const key = document.getElementById('apiKey').value.trim();
   const q   = document.getElementById('searchInput').value.trim();
@@ -496,25 +472,28 @@ function addToCandidate(idx) {
   toast(`"${r.channelName}" 추가 — 💾 Firebase 저장을 눌러 반영하세요`);
 }
 
-// ════════════════════════════════════════
-// 로그인 / 로그아웃
-// ════════════════════════════════════════
 function tryLogin() {
   const pw = document.getElementById('adminPwInput').value.trim();
   if (pw === ADMIN_PASSWORD) { isAdmin = true; renderApp(); toast('관리자 모드'); }
   else { toast('비밀번호가 틀렸습니다.'); document.getElementById('adminPwInput').value = ''; }
 }
+
 function logout() { isAdmin = false; renderApp(); }
 
-// ════════════════════════════════════════
-// 헬퍼
-// ════════════════════════════════════════
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 let _tt;
 function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800); }
 
-// moveCh, delCh 전역 노출
-window._tryLogin = tryLogin;
+window.tryLogin       = tryLogin;
+window.logout         = logout;
+window.doSearch       = doSearch;
+window.saveToFirebase = saveToFirebase;
+window.addToCandidate = addToCandidate;
+window.addChDirect    = addChDirect;
+window.moveCh         = moveCh;
+window.delCh          = delCh;
+window.onFrameLoad    = onFrameLoad;
+window.onFrameError   = onFrameError;
 </script>
 </body>
 </html>
