@@ -212,7 +212,7 @@ function initViewer() {
   else if (n === 3){ wrap.style.gridTemplateColumns='1fr 1fr 1fr'; wrap.style.gridTemplateRows='1fr'; }
   else if (n === 4){ wrap.style.gridTemplateColumns='1fr 1fr'; wrap.style.gridTemplateRows='1fr 1fr'; }
   else if (n <= 6) { wrap.style.gridTemplateColumns='1fr 1fr 1fr'; wrap.style.gridTemplateRows='1fr 1fr'; }
-  else             { wrap.style.gridTemplateColumns='2.2fr 1fr 1fr 1fr 1fr'; wrap.style.gridTemplateRows='1fr 1fr'; }
+  else             { wrap.style.gridTemplateColumns='1fr 1fr 1fr'; wrap.style.gridTemplateRows='1fr 1fr 1fr'; }
 
   if (n === 0) {
     wrap.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px">등록된 채널이 없습니다.</div>`;
@@ -222,7 +222,7 @@ function initViewer() {
   for (let i = 0; i < n; i++) {
     slotChIdx[i] = i;
     const cell = document.createElement('div');
-    cell.className = 'cell' + (i === 0 && n >= 7 ? ' main-cell' : '');
+    cell.className = 'cell';
     cell.id = `cell-${i}`;
     cell.innerHTML = buildSlotHTML(i, candidateChannels[i]);
     cell.style.cursor = 'pointer';
