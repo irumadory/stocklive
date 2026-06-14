@@ -204,8 +204,8 @@ function initViewer() {
   const wrap = document.getElementById('viewerGrid');
   if (!wrap) return;
   wrap.innerHTML = '';
-  const n = Math.min(9, candidateChannels.length);
-  nextAvailableIdx = n;
+  const n = 9; // 8개 라이브 + 1개 홍보(5번)
+  nextAvailableIdx = Math.min(8, candidateChannels.length);
 
   if      (n <= 1) { wrap.style.gridTemplateColumns='1fr'; wrap.style.gridTemplateRows='1fr'; }
   else if (n === 2){ wrap.style.gridTemplateColumns='1fr 1fr'; wrap.style.gridTemplateRows='1fr'; }
@@ -224,9 +224,30 @@ function initViewer() {
     const cell = document.createElement('div');
     cell.className = 'cell';
     cell.id = `cell-${i}`;
-    cell.innerHTML = buildSlotHTML(i, candidateChannels[i]);
+
+    // 5번 슬롯 (index 4) → irumadory 홍보 슬롯
+    if (i === 4) {
+      cell.innerHTML = `
+        <iframe
+          src="https://www.youtube.com/embed?listType=user_uploads&list=UCKcmpJmxf7ZS8JB1Pu2RmDg&autoplay=1&mute=1&rel=0&modestbranding=1"
+          allow="autoplay;encrypted-media;fullscreen"
+          allowfullscreen
+          style="position:absolute;inset:0;width:100%;height:100%;border:none">
+        </iframe>
+        <div class="live-badge-cell" style="background:var(--accent2)">CH</div>
+        <div class="cell-label">📺 iRumaDory</div>`;
+      cell.style.cursor = 'pointer';
+      cell.addEventListener('click', e => {
+        if (e.target.tagName === 'IFRAME') return;
+        window.open('https://www.youtube.com/@irumadory', '_blank');
+      });
+      wrap.appendChild(cell);
+      continue;
+    }
+
+    cell.innerHTML = buildSlotHTML(i, candidateChannels[i < 4 ? i : i - 1]);
     cell.style.cursor = 'pointer';
-    const chIdx = i;
+    const chIdx = i < 4 ? i : i - 1;
     cell.addEventListener('click', e => {
       if (e.target.tagName === 'IFRAME') return;
       const ch = candidateChannels[slotChIdx[chIdx]];
