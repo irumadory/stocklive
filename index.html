@@ -225,8 +225,8 @@ function initViewer() {
     cell.className = 'cell';
     cell.id = `cell-${i}`;
 
-    // 5번 슬롯 (index 4) → irumadory 홍보 카드
     if (i === 4) {
+      // 5번 슬롯 → irumadory 홍보 카드
       cell.innerHTML = `
         <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
           background:linear-gradient(135deg,#1a0a2e 0%,#0d0d1a 50%,#1a1a0a 100%);cursor:pointer;text-align:center;padding:20px">
@@ -242,33 +242,19 @@ function initViewer() {
       cell.addEventListener('click', () => {
         window.open('https://www.youtube.com/@irumadory', '_blank');
       });
-      wrap.appendChild(cell);
-      continue;
+    } else {
+      // 일반 라이브 슬롯
+      const chIdx = i < 4 ? i : i - 1;
+      if (candidateChannels[chIdx]) {
+        cell.innerHTML = buildSlotHTML(i, candidateChannels[chIdx]);
+        cell.style.cursor = 'pointer';
+        cell.addEventListener('click', e => {
+          if (e.target.tagName === 'IFRAME') return;
+          const ch = candidateChannels[slotChIdx[chIdx]];
+          if (ch) window.open(`https://www.youtube.com/channel/${ch.channelId}`, '_blank');
+        });
+      }
     }
-      cell.style.cursor = 'pointer';
-      cell.addEventListener('click', () => {
-        window.open('https://www.youtube.com/@irumadory', '_blank');
-      });
-      wrap.appendChild(cell);
-      continue;
-    }
-      cell.style.cursor = 'pointer';
-      cell.addEventListener('click', e => {
-        if (e.target.tagName === 'IFRAME') return;
-        window.open('https://www.youtube.com/@irumadory', '_blank');
-      });
-      wrap.appendChild(cell);
-      continue;
-    }
-
-    cell.innerHTML = buildSlotHTML(i, candidateChannels[i < 4 ? i : i - 1]);
-    cell.style.cursor = 'pointer';
-    const chIdx = i < 4 ? i : i - 1;
-    cell.addEventListener('click', e => {
-      if (e.target.tagName === 'IFRAME') return;
-      const ch = candidateChannels[slotChIdx[chIdx]];
-      if (ch) window.open(`https://www.youtube.com/channel/${ch.channelId}`, '_blank');
-    });
     wrap.appendChild(cell);
   }
 
