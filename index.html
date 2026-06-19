@@ -187,34 +187,42 @@ function buildViewer() {
 // ════════════════════════════════════════
 // 라이브 검증 (stockrank 데이터 재사용)
 // ════════════════════════════════════════
-let liveChannelIds = new Set(); // 현재 라이브 확인된 channelId만 저장
+let liveChannelIds = new Set();   // 현재 라이브 중인 channelId
+let knownChannelIds = new Set();  // stockrank가 추적하는 전체 channelId (라이브 여부 무관)
 let liveDataLoaded = false;
 
 db.ref('stockrank').on('value', snap => {
   const data = snap.val();
   const ranking = data && data.ranking ? data.ranking : [];
-  // ranking 항목엔 channelName만 있고 channelId가 없을 수 있어 videoId 기반으로도 매칭 준비
   liveChannelIds = new Set();
-  ranking.forEach(r => {
-    if (r.channelId) liveChannelIds.add(r.channelId);
-  });
+  ranking.forEach(r => { if (r.channelId) liveChannelIds.add(r.channelId); });
   liveDataLoaded = true;
-  // 이미 화면이 떠 있다면 다시 그릴 필요는 없음 (다음 갱신때 자연 반영)
 });
 
+// stockrank가 추적하는 18개 채널 ID 목록 (youtube_live_monitor.py CHANNELS와 동일하게 유지)
+knownChannelIds = new Set([
+  "UChlgI3UHCOnwUGzWzbJ3H5w","UC38IlqMxZ_YtFg3eSGmmJnQ","UCTHCOPwqNfZ0uiKOvFyhGwg",
+  "UC6kZpTl39-_SqfBrF1-N2oQ","UCF8AeLlUbEpKju6v1H6p8Eg","UCnfwIKyFYRuqZzzKBDt6JOA",
+  "UC3p-0EWA8OXko2EUDUXAy5w","UClErHbdZKUnD1NyIUeQWvuQ","UC8Sv6O3Ux8ePVqorx8aOBMg",
+  "UCgJ5pT6S2NuTVP-6-AlLZew","UChlv4GSd7OQl3js-jkLOnFA","UCsJ6RuBiTVWRX156FVbeaGg",
+  "UCJcKil21st0y5Yr1aLWt8rQ","UCCG6BEYjfQMGzypJw2EJCDQ","UCvil4OAt-zShzkKHsg9EQAw",
+  "UCokKNpoXdckibdLOjf_1lFw","UC_JJ_NhRqPKcIOj5Ko3W_3w","UCGF6SQDqskBZXubOiHiuq8Q"
+]);
+
 function isLikelyLive(ch) {
-  // stockrank 데이터에 channelId가 없는 경우(범용 채널) 대비 — 정보 없으면 일단 통과시키고 onload/재시도 로직에 맡김
-  if (!liveDataLoaded || liveChannelIds.size === 0) return true;
-  if (!ch.channelId) return true;
+  if (!liveDataLoaded) return true; // 데이터 로딩 전엔 일단 통과
+  if (!ch.channelId || !knownChannelIds.has(ch.channelId)) return true; // 추적 대상 아닌 채널은 통과
   return liveChannelIds.has(ch.channelId);
 }
 
 function getOrderedLiveFirstChannels() {
-  // 라이브로 확인된 채널을 앞으로, 나머지는 뒤로 — 원래 순서는 각 그룹 내에서 유지
   const live = [];
   const unknown = [];
   candidateChannels.forEach(ch => {
-    if (isLikelyLive(ch)) live.push(ch); else unknown.push(ch);
+    const known = ch.channelId && knownChannelIds.has(ch.channelId);
+    if (!known) { unknown.push(ch); return; } // 추적 대상이 아닌 범용 채널 — 통과
+    if (liveDataLoaded && liveChannelIds.has(ch.channelId)) live.push(ch);
+    // known인데 라이브가 아니면 완전히 제외
   });
   return live.concat(unknown);
 }
