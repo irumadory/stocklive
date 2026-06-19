@@ -194,10 +194,37 @@ let liveDataLoaded = false;
 db.ref('stockrank').on('value', snap => {
   const data = snap.val();
   const ranking = data && data.ranking ? data.ranking : [];
+  const prevLiveIds = liveChannelIds;
   liveChannelIds = new Set();
   ranking.forEach(r => { if (r.channelId) liveChannelIds.add(r.channelId); });
+  const wasLoaded = liveDataLoaded;
   liveDataLoaded = true;
+
+  // 이미 화면(뷰어 모드)에 떠 있는 경우 — 종료된 채널만 자동 교체
+  if (wasLoaded && !isAdmin && document.getElementById('viewerGrid')) {
+    checkAndReplaceOfflineSlots();
+  }
 });
+
+// 화면에 떠 있는 슬롯 중, stockrank 추적 대상인데 라이브가 끝난 슬롯만 다음 후보로 교체
+function checkAndReplaceOfflineSlots() {
+  const ordered = window._orderedChannels;
+  if (!ordered) return;
+  for (let i = 0; i < 9; i++) {
+    if (i === 4) continue; // 홍보 슬롯
+    const ch = ordered[slotChIdx[i]];
+    if (!ch) continue;
+    const known = ch.channelId && knownChannelIds.has(ch.channelId);
+    const stillLive = !known || liveChannelIds.has(ch.channelId);
+    if (!stillLive) {
+      log_replace(ch.channelName);
+      tryNextForSlot(i);
+    }
+  }
+}
+function log_replace(name) {
+  console.log(`[자동교체] ${name} 라이브 종료 감지 → 다음 채널로 교체`);
+}
 
 // stockrank가 추적하는 18개 채널 ID 목록 (youtube_live_monitor.py CHANNELS와 동일하게 유지)
 knownChannelIds = new Set([
@@ -248,7 +275,10 @@ function initViewer() {
   }
 
   for (let i = 0; i < n; i++) {
-    slotChIdx[i] = i;
+    if (i !== 4) {
+      const chIdx = i < 4 ? i : i - 1;
+      slotChIdx[i] = chIdx;
+    }
     const cell = document.createElement('div');
     cell.className = 'cell';
     cell.id = `cell-${i}`;
@@ -274,7 +304,7 @@ function initViewer() {
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', e => {
           if (e.target.tagName === 'IFRAME') return;
-          const ch = ordered[slotChIdx[chIdx]];
+          const ch = ordered[slotChIdx[i]];
           if (ch) window.open(`https://www.youtube.com/channel/${ch.channelId}`, '_blank');
         });
       }
