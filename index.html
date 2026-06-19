@@ -342,12 +342,19 @@ function checkAllSlots() {
 }
 function tryNextForSlot(slotIdx) {
   const ordered = window._orderedChannels || candidateChannels;
-  if (nextAvailableIdx >= ordered.length) return;
-  const ch = ordered[nextAvailableIdx];
-  slotChIdx[slotIdx] = nextAvailableIdx;
-  nextAvailableIdx++;
+  while (nextAvailableIdx < ordered.length) {
+    const candidate = ordered[nextAvailableIdx];
+    if (isLikelyLive(candidate)) {
+      slotChIdx[slotIdx] = nextAvailableIdx;
+      const cell = document.getElementById(`cell-${slotIdx}`);
+      if (cell) cell.innerHTML = buildSlotHTML(slotIdx, candidate);
+      nextAvailableIdx++;
+      return;
+    }
+    nextAvailableIdx++;
+  }
   const cell = document.getElementById(`cell-${slotIdx}`);
-  if (cell) cell.innerHTML = buildSlotHTML(slotIdx, ch);
+  if (cell) cell.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px">대기 중인 라이브가 없습니다</div>`;
 }
 function updateViewerCount() {
   let count = 0;
