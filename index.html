@@ -184,12 +184,48 @@ function buildViewer() {
   </div>`;
 }
 
+// ════════════════════════════════════════
+// 라이브 검증 (stockrank 데이터 재사용)
+// ════════════════════════════════════════
+let liveChannelIds = new Set(); // 현재 라이브 확인된 channelId만 저장
+let liveDataLoaded = false;
+
+db.ref('stockrank').on('value', snap => {
+  const data = snap.val();
+  const ranking = data && data.ranking ? data.ranking : [];
+  // ranking 항목엔 channelName만 있고 channelId가 없을 수 있어 videoId 기반으로도 매칭 준비
+  liveChannelIds = new Set();
+  ranking.forEach(r => {
+    if (r.channelId) liveChannelIds.add(r.channelId);
+  });
+  liveDataLoaded = true;
+  // 이미 화면이 떠 있다면 다시 그릴 필요는 없음 (다음 갱신때 자연 반영)
+});
+
+function isLikelyLive(ch) {
+  // stockrank 데이터에 channelId가 없는 경우(범용 채널) 대비 — 정보 없으면 일단 통과시키고 onload/재시도 로직에 맡김
+  if (!liveDataLoaded || liveChannelIds.size === 0) return true;
+  if (!ch.channelId) return true;
+  return liveChannelIds.has(ch.channelId);
+}
+
+function getOrderedLiveFirstChannels() {
+  // 라이브로 확인된 채널을 앞으로, 나머지는 뒤로 — 원래 순서는 각 그룹 내에서 유지
+  const live = [];
+  const unknown = [];
+  candidateChannels.forEach(ch => {
+    if (isLikelyLive(ch)) live.push(ch); else unknown.push(ch);
+  });
+  return live.concat(unknown);
+}
+
 function initViewer() {
   const wrap = document.getElementById('viewerGrid');
   if (!wrap) return;
   wrap.innerHTML = '';
   const n = 9;
-  nextAvailableIdx = Math.min(8, candidateChannels.length);
+  const ordered = getOrderedLiveFirstChannels();
+  nextAvailableIdx = Math.min(8, ordered.length);
 
   if      (n <= 1) { wrap.style.gridTemplateColumns='1fr'; wrap.style.gridTemplateRows='1fr'; }
   else if (n === 2){ wrap.style.gridTemplateColumns='1fr 1fr'; wrap.style.gridTemplateRows='1fr'; }
@@ -225,18 +261,20 @@ function initViewer() {
       cell.addEventListener('click', () => window.open('https://www.youtube.com/@irumadory', '_blank'));
     } else {
       const chIdx = i < 4 ? i : i - 1;
-      if (candidateChannels[chIdx]) {
-        cell.innerHTML = buildSlotHTML(i, candidateChannels[chIdx]);
+      if (ordered[chIdx]) {
+        cell.innerHTML = buildSlotHTML(i, ordered[chIdx]);
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', e => {
           if (e.target.tagName === 'IFRAME') return;
-          const ch = candidateChannels[slotChIdx[chIdx]];
+          const ch = ordered[slotChIdx[chIdx]];
           if (ch) window.open(`https://www.youtube.com/channel/${ch.channelId}`, '_blank');
         });
       }
     }
     wrap.appendChild(cell);
   }
+
+  window._orderedChannels = ordered; // tryNextForSlot에서 참조
 
   updateViewerCount();
   setTimeout(checkAllSlots, 12000);
@@ -271,14 +309,16 @@ function onFrameLoad(slotIdx) {
 function onFrameError(slotIdx) { tryNextForSlot(slotIdx); }
 
 function checkAllSlots() {
-  for (let i = 0; i < Math.min(9, candidateChannels.length); i++) {
+  const ordered = window._orderedChannels || candidateChannels;
+  for (let i = 0; i < Math.min(9, ordered.length); i++) {
     const ol = document.getElementById(`ol-${i}`);
     if (ol && !ol.classList.contains('hidden')) tryNextForSlot(i);
   }
 }
 function tryNextForSlot(slotIdx) {
-  if (nextAvailableIdx >= candidateChannels.length) return;
-  const ch = candidateChannels[nextAvailableIdx];
+  const ordered = window._orderedChannels || candidateChannels;
+  if (nextAvailableIdx >= ordered.length) return;
+  const ch = ordered[nextAvailableIdx];
   slotChIdx[slotIdx] = nextAvailableIdx;
   nextAvailableIdx++;
   const cell = document.getElementById(`cell-${slotIdx}`);
