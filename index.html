@@ -198,23 +198,25 @@ db.ref(`live_status/${CHANNEL_KEY}`).on('value', snap => {
   const wasLoaded = liveDataLoaded;
   liveDataLoaded = true;
 
-  // 이미 화면(뷰어 모드)에 떠 있는 경우 — 종료된 채널만 자동 교체
-  if (wasLoaded && !isAdmin && document.getElementById('viewerGrid')) {
-    checkAndReplaceOfflineSlots();
+  if (!isAdmin && document.getElementById('viewerGrid')) {
+    if (!wasLoaded) {
+      initViewer();
+    } else {
+      checkAndReplaceOfflineSlots();
+    }
   }
 });
 
 // 화면에 떠 있는 슬롯 중 라이브가 끝난 슬롯만 다음 후보로 교체
 function checkAndReplaceOfflineSlots() {
-  const ordered = window._orderedChannels;
-  if (!ordered) return;
+  const ordered = getOrderedLiveFirstChannels();
+  window._orderedChannels = ordered;
   for (let i = 0; i < 9; i++) {
     if (i === 4) continue; // 홍보 슬롯
     const ch = ordered[slotChIdx[i]];
-    if (!ch) continue;
-    const stillLive = !ch.channelId || liveChannelIds.has(ch.channelId);
+    const stillLive = ch && (!ch.channelId || liveChannelIds.has(ch.channelId));
     if (!stillLive) {
-      log_replace(ch.channelName);
+      if (ch) log_replace(ch.channelName);
       tryNextForSlot(i);
     }
   }
