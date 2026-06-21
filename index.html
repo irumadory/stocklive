@@ -141,11 +141,16 @@ const db   = firebase.database();
 const auth = firebase.auth();
 const channelRef = db.ref(`channels/${CHANNEL_KEY}`);
 
-let candidateChannels = [];
-let isAdmin = false;
-let searchResults = [];
-let nextAvailableIdx = 0;
-const slotChIdx = [];
+let candidateChannels  = [];
+let isAdmin            = false;
+let searchResults      = [];
+let nextAvailableIdx   = 0;
+const slotChIdx        = [];
+
+// stockrank 랭킹 데이터 (빈 슬롯 채우기용)
+let stockrankItems     = [];
+let stockrankUpdatedAt = 0;
+const STOCKRANK_MAX_AGE = 35 * 60 * 1000;  // 35분 초과 시 stale로 간주
 
 auth.onAuthStateChanged((user) => {
   isAdmin = !!(user && user.email === ADMIN_EMAIL);
@@ -207,14 +212,40 @@ db.ref(`live_status/${CHANNEL_KEY}`).on('value', snap => {
   }
 });
 
+// ════════════════════════════════════════
+// stockrank 랭킹 데이터 리스너 (빈 슬롯 보충용)
+// ════════════════════════════════════════
+db.ref('ranking/stockrank').on('value', snap => {
+  const data = snap.val();
+  const age  = data?.updatedAt ? Date.now() - data.updatedAt : Infinity;
+  if (data?.items?.length && age < STOCKRANK_MAX_AGE) {
+    stockrankItems     = data.items;
+    stockrankUpdatedAt = data.updatedAt;
+    console.log(`[stockrank] ${data.items.length}개 수신, ${Math.round(age/60000)}분 전 업데이트`);
+  } else {
+    stockrankItems     = [];
+    stockrankUpdatedAt = 0;
+    if (data) console.log(`[stockrank] 만료(${Math.round(age/60000)}분) 또는 빈 데이터 — 무시`);
+  }
+  // 뷰어 화면이 이미 렌더된 상태면 _orderedChannels 갱신 (빈 슬롯 tryNextForSlot에 즉시 반영)
+  if (!isAdmin && document.getElementById('viewerGrid')) {
+    window._orderedChannels = getMergedChannels();
+  }
+});
+
 // 화면에 떠 있는 슬롯 중 라이브가 끝난 슬롯만 다음 후보로 교체
 function checkAndReplaceOfflineSlots() {
-  const ordered = getOrderedLiveFirstChannels();
+  const ordered = getMergedChannels();
   window._orderedChannels = ordered;
   for (let i = 0; i < 9; i++) {
     if (i === 4) continue; // 홍보 슬롯
     const ch = ordered[slotChIdx[i]];
-    const stillLive = ch && (!ch.channelId || liveChannelIds.has(ch.channelId));
+    // stockrank 항목은 이미 라이브 검증됨, manual만 live_status 체크
+    const stillLive = ch && (
+      ch.source === 'stockrank' ||
+      !ch.channelId ||
+      liveChannelIds.has(ch.channelId)
+    );
     if (!stillLive) {
       if (ch) log_replace(ch.channelName);
       tryNextForSlot(i);
@@ -226,21 +257,39 @@ function log_replace(name) {
 }
 
 function isLikelyLive(ch) {
-  if (!liveDataLoaded) return true; // 데이터 로딩 전엔 일단 통과 (서버가 아직 첫 체크 안 함)
+  if (ch.source === 'stockrank') return true;  // stockrank는 이미 라이브 검증됨
+  if (!liveDataLoaded) return true;
   if (!ch.channelId) return true;
   return liveChannelIds.has(ch.channelId);
 }
 
+// 수동 등록 채널 중 라이브 중인 것 (source:'manual' 태그 포함)
 function getOrderedLiveFirstChannels() {
-  const live = [];
-  const unknown = [];
+  const live = [], unknown = [];
   candidateChannels.forEach(ch => {
-    if (!liveDataLoaded) { unknown.push(ch); return; } // 데이터 로딩 전엔 일단 통과
-    if (!ch.channelId) { unknown.push(ch); return; }
-    if (liveChannelIds.has(ch.channelId)) live.push(ch);
-    // 라이브가 아니면 완전히 제외
+    const tagged = { ...ch, source: 'manual' };
+    if (!liveDataLoaded) { unknown.push(tagged); return; }
+    if (!ch.channelId)   { unknown.push(tagged); return; }
+    if (liveChannelIds.has(ch.channelId)) live.push(tagged);
+    // 라이브 아닌 수동 채널은 제외 (빈 슬롯은 stockrank로 채움)
   });
   return live.concat(unknown);
+}
+
+// stockrank 랭킹에서 수동 채널과 중복되지 않는 항목 반환
+function getStockrankFill(excludeIds) {
+  if (!stockrankItems.length) return [];
+  return stockrankItems
+    .filter(item => item.channelId && !excludeIds.has(item.channelId))
+    .map(item => ({ ...item, source: 'stockrank' }));
+}
+
+// 수동 라이브 채널 + stockrank 보충 채널 병합
+function getMergedChannels() {
+  const manual  = getOrderedLiveFirstChannels();
+  const usedIds = new Set(manual.map(ch => ch.channelId).filter(Boolean));
+  const fill    = getStockrankFill(usedIds);
+  return [...manual, ...fill];
 }
 
 function initViewer() {
@@ -248,7 +297,7 @@ function initViewer() {
   if (!wrap) return;
   wrap.innerHTML = '';
   const n = 9;
-  const ordered = getOrderedLiveFirstChannels();
+  const ordered = getMergedChannels();
   nextAvailableIdx = Math.min(8, ordered.length);
 
   if      (n <= 1) { wrap.style.gridTemplateColumns='1fr'; wrap.style.gridTemplateRows='1fr'; }
@@ -311,6 +360,17 @@ function initViewer() {
 }
 
 function buildSlotHTML(slotIdx, ch) {
+  // stockrank: 특정 videoId로 임베드 (더 정확), manual: 채널 라이브 스트림 임베드
+  const iframeSrc = (ch.source === 'stockrank' && ch.videoId)
+    ? `https://www.youtube.com/embed/${ch.videoId}?autoplay=1&mute=1&rel=0&modestbranding=1`
+    : `https://www.youtube.com/embed/live_stream?channel=${ch.channelId}&autoplay=1&mute=1&rel=0&modestbranding=1`;
+  // stockrank 슬롯은 주황 RANK 배지로 구분
+  const badgeStyle = ch.source === 'stockrank' ? ' style="background:var(--accent2);color:#000"' : '';
+  const badgeText  = ch.source === 'stockrank' ? 'RANK' : 'LIVE';
+  // stockrank는 시청자 수도 표시
+  const labelText  = (ch.source === 'stockrank' && ch.viewers)
+    ? `${esc(ch.channelName)} · ${Number(ch.viewers).toLocaleString()}명`
+    : esc(ch.channelName);
   return `
     <div class="cell-overlay" id="ol-${slotIdx}">
       <div class="spin"></div>
@@ -318,14 +378,14 @@ function buildSlotHTML(slotIdx, ch) {
     </div>
     <iframe
       id="iframe-${slotIdx}"
-      src="https://www.youtube.com/embed/live_stream?channel=${ch.channelId}&autoplay=1&mute=1&rel=0&modestbranding=1"
+      src="${iframeSrc}"
       allow="autoplay;encrypted-media;fullscreen"
       allowfullscreen
       onload="onFrameLoad(${slotIdx})"
       onerror="onFrameError(${slotIdx})">
     </iframe>
-    <div class="live-badge-cell">LIVE</div>
-    <div class="cell-label" id="clabel-${slotIdx}">${esc(ch.channelName)}</div>`;
+    <div class="live-badge-cell"${badgeStyle}>${badgeText}</div>
+    <div class="cell-label" id="clabel-${slotIdx}">${labelText}</div>`;
 }
 
 function onFrameLoad(slotIdx) {
